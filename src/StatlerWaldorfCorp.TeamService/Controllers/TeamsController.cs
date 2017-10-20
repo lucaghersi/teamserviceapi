@@ -21,7 +21,7 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
             return Ok(_repository.List());
         }
 
-        [HttpGet("{id}", Name = "GetById")]
+        [HttpGet("{id}", Name = "GetTeamById")]
         public IActionResult GetTeam(Guid id)
         {
             Team team = _repository.Get(id);
@@ -34,8 +34,10 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         [HttpPost]
         public virtual IActionResult CreateTeam([FromBody] Team newTeam)
         {
+            if (newTeam.Id == Guid.Empty) newTeam.Id = Guid.NewGuid();
+
             _repository.Add(newTeam);
-            return Created(Url.Link("GetById", newTeam.Id), newTeam);
+            return Created(Url.Link("GetTeamById", new {id = newTeam.Id}), newTeam);
         }
 
         [HttpPut("{id}")]

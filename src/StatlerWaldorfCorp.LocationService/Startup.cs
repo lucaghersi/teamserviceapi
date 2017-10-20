@@ -2,19 +2,14 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using StatlerWaldorfCorp.TeamService.LocationClient;
-using StatlerWaldorfCorp.TeamService.Persistence;
+using StatlerWaldorfCorp.LocationService.Persistence;
 
-namespace StatlerWaldorfCorp.TeamService
+namespace StatlerWaldorfCorp.LocationService
 {
     public class Startup
     {
-        private readonly ILogger _logger;
-
-        public Startup(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration configuration)
         {
-            _logger = loggerFactory.CreateLogger(typeof(Startup));
             Configuration = configuration;
         }
 
@@ -24,12 +19,7 @@ namespace StatlerWaldorfCorp.TeamService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddScoped<ITeamRepository, MemoryTeamRepository>();
-
-            var locationUrl = Configuration.GetSection("location:ip").Value;
-            _logger.LogInformation("Using {0} for location service IP.", locationUrl);
-
-            services.AddSingleton<ILocationClient>(new HttpLocationClient($"http://{locationUrl}:80"));
+            services.AddScoped<ILocationRecordRepository, InMemoryLocationRecordRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

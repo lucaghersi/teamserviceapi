@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  statlerwaldorfcorp.teamservice:
+    image: statlerwaldorfcorp.teamservice
+    build:
+      context: ./src/StatlerWaldorfCorp.TeamService
+      dockerfile: Dockerfile
+    environment:
+      - LOCATION__IP=statlerwaldorfcorp.locationservice
+    links: 
+      - statlerwaldorfcorp.locationservice
+
+  statlerwaldorfcorp.locationservice:
+    image: statlerwaldorfcorp.locationservice
+    build:
+      context: ./src/StatlerWaldorfCorp.LocationService
+      dockerfile: Dockerfile

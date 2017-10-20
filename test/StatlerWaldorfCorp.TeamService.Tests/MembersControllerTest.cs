@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using StatlerWaldorfCorp.TeamService.Controllers;
+using StatlerWaldorfCorp.TeamService.LocationClient;
 using StatlerWaldorfCorp.TeamService.Models;
 using StatlerWaldorfCorp.TeamService.Persistence;
 using StatlerWaldorfCorp.TeamService.Tests;
@@ -17,7 +18,7 @@ namespace StatlerWaldorfCorp.TeamService
     {
         private MembersController GetController(ITeamRepository repository)
         {
-            var controller = new MembersController(repository) {Url = new UrlHelper()};
+            var controller = new MembersController(repository, new MemoryLocationClient()) {Url = new UrlHelper()};
             return controller;
         }
 
@@ -55,7 +56,7 @@ namespace StatlerWaldorfCorp.TeamService
         }
 
         [Fact]
-        public void GetExistingMemberReturnsMember()
+        public async void GetExistingMemberReturnsMember()
         {
             ITeamRepository repository = new MemoryTeamRepositoryTest();
             MembersController controller = GetController(repository);
@@ -70,7 +71,7 @@ namespace StatlerWaldorfCorp.TeamService
             newMember.LastName = "Smith";
             controller.CreateMember(newMember, teamId);
 
-            var member = (Member) (controller.GetMember(teamId, memberId) as ObjectResult).Value;
+            Member member = (Member)(await controller.GetMember(teamId, memberId) as ObjectResult).Value;
             Assert.Equal(member.Id, newMember.Id);
         }
 
@@ -127,7 +128,7 @@ namespace StatlerWaldorfCorp.TeamService
         }
 
         [Fact]
-        public void GetNonExistantMemberReturnsNotFound()
+        public async void GetNonExistantMemberReturnsNotFound()
         {
             ITeamRepository repository = new MemoryTeamRepositoryTest();
             MembersController controller = GetController(repository);
@@ -136,17 +137,17 @@ namespace StatlerWaldorfCorp.TeamService
             var team = new Team("TestTeam", teamId);
             Team debugTeam = repository.Add(team);
 
-            IActionResult result = controller.GetMember(teamId, Guid.NewGuid());
+            IActionResult result = await controller.GetMember(teamId, Guid.NewGuid());
             Assert.True(result is NotFoundResult);
         }
 
         [Fact]
-        public void GetNonExistantTeamReturnsNotFound()
+        public async void GetNonExistantTeamReturnsNotFound()
         {
             ITeamRepository repository = new MemoryTeamRepositoryTest();
             MembersController controller = GetController(repository);
 
-            IActionResult result = controller.GetMember(Guid.NewGuid(), Guid.NewGuid());
+            IActionResult result = await controller.GetMember(Guid.NewGuid(), Guid.NewGuid());
             Assert.True(result is NotFoundResult);
         }
 

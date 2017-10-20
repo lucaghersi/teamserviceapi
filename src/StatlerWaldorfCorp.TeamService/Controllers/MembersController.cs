@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using StatlerWaldorfCorp.TeamService.LocationClient;
 using StatlerWaldorfCorp.TeamService.Models;
 using StatlerWaldorfCorp.TeamService.Persistence;
 
@@ -9,11 +11,13 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
     [Route("/teams/{teamId}/[controller]")]
     public class MembersController : Controller
     {
+        private readonly ILocationClient _locationClient;
         private readonly ITeamRepository _repository;
 
-        public MembersController(ITeamRepository repo)
+        public MembersController(ITeamRepository repo, ILocationClient locationClient)
         {
             _repository = repo;
+            _locationClient = locationClient;
         }
 
         [HttpGet]
@@ -28,7 +32,7 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
 
 
         [HttpGet("/teams/{teamId}/[controller]/{memberId}")]
-        public virtual IActionResult GetMember(Guid teamId, Guid memberId)
+        public virtual async Task<IActionResult> GetMember(Guid teamId, Guid memberId)
         {
             Team team = _repository.Get(teamId);
 
@@ -37,8 +41,18 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
             var q = team.Members.Where(m => m.Id == memberId).ToList();
 
             if (!q.Any())
+            {
                 return NotFound();
-            return Ok(q.First());
+            }
+            Member member = q.First();
+
+            return Ok(new LocatedMember
+            {
+                Id = member.Id,
+                FirstName = member.FirstName,
+                LastName = member.LastName,
+                LastLocation = await _locationClient.GetLatestForMember(member.Id)
+            });
         }
 
         [HttpPut("/teams/{teamId}/[controller]/{memberId}", Name = "GetById")]
@@ -60,6 +74,8 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         [HttpPost]
         public virtual IActionResult CreateMember([FromBody] Member newMember, Guid teamId)
         {
+            newMember.Id = Guid.NewGuid();
+
             Team team = _repository.Get(teamId);
 
             if (team == null)
