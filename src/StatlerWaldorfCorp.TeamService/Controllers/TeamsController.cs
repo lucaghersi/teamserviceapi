@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using StatlerWaldorfCorp.TeamService.Models;
 using StatlerWaldorfCorp.TeamService.Persistence;
@@ -16,7 +17,7 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpGet]
-        public virtual IActionResult GetAllTeams()
+        public IActionResult GetAllTeams()
         {
             return Ok(_repository.List());
         }
@@ -32,32 +33,27 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpPost]
-        public virtual IActionResult CreateTeam([FromBody] Team newTeam)
+        public async Task<IActionResult> CreateTeam([FromBody] Team newTeam)
         {
-            if (newTeam.Id == Guid.Empty) newTeam.Id = Guid.NewGuid();
-
-            _repository.Add(newTeam);
+            newTeam = await _repository.Add(newTeam);
             return Created(Url.Link("GetTeamById", new {id = newTeam.Id}), newTeam);
         }
 
         [HttpPut("{id}")]
-        public virtual IActionResult UpdateTeam([FromBody] Team team, Guid id)
+        public async Task<IActionResult> UpdateTeam([FromBody] Team team, Guid id)
         {
             team.Id = id;
 
-            if (_repository.Update(team) == null)
+            if (await _repository.Update(team) == null)
                 return NotFound();
             return Ok(team);
         }
 
         [HttpDelete("{id}")]
-        public virtual IActionResult DeleteTeam(Guid id)
+        public async Task<IActionResult> DeleteTeam(Guid id)
         {
-            Team team = _repository.Delete(id);
-
-            if (team == null)
-                return NotFound();
-            return Ok(team.Id);
+            await _repository.Delete(id);
+            return Ok();
         }
     }
 }

@@ -7,7 +7,7 @@ services:
       context: ./src/StatlerWaldorfCorp.TeamService
       dockerfile: Dockerfile
     environment:
-      - LOCATION__IP=statlerwaldorfcorp.locationservice
+      - LOCATIONSERVICE__SERVER=statlerwaldorfcorp.locationservice
     links: 
       - statlerwaldorfcorp.locationservice
 

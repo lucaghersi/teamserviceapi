@@ -19,7 +19,6 @@ namespace StatlerWaldorfCorp.LocationService.Controllers
         public IActionResult AddLocation(Guid memberId, [FromBody] LocationRecord locationRecord)
         {
             locationRecord.MemberId = memberId;
-            locationRecord.ID = Guid.NewGuid();
                 
             _locationRepository.Add(locationRecord);
             return Created(Url.Link("GetLastLocationForMember", new {memberId}), locationRecord);

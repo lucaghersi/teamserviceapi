@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,12 +27,17 @@ namespace StatlerWaldorfCorp.TeamService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddScoped<ITeamRepository, MemoryTeamRepository>();
+            services.AddScoped<ITeamRepository, TeamServiceContext>();
 
-            var locationUrl = Configuration.GetSection("location:ip").Value;
+            var locationUrl = Configuration.GetSection("locationService:server").Value;
             _logger.LogInformation("Using {0} for location service IP.", locationUrl);
 
             services.AddSingleton<ILocationClient>(new HttpLocationClient($"http://{locationUrl}:80"));
+
+            var docDb = Configuration.GetSection("documentdb:uri").Value;
+            var docDbKey = Configuration.GetSection("documentdb:key").Value;
+
+            services.AddSingleton<IDocumentClient>(new DocumentClient(new Uri(docDb), docDbKey));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
