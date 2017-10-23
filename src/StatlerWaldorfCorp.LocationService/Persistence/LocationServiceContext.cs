@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 using StatlerWaldorfCorp.LocationService.Models;
 
 namespace StatlerWaldorfCorp.LocationService.Persistence
@@ -32,45 +33,50 @@ namespace StatlerWaldorfCorp.LocationService.Persistence
         public async Task<LocationRecord> Add(LocationRecord locationRecord)
         {
             locationRecord.Id = Guid.NewGuid();
-            locationRecord.Timestamp = DateTimeOffset.UtcNow;
+            locationRecord.CreationDate = DateTimeOffset.UtcNow;
             
             await _documentClient.CreateDocumentAsync(GetLocationsCollectionUri(), locationRecord);
             return locationRecord;
         }
 
-        public async Task<LocationRecord> Update(LocationRecord locationRecord)
+        public async Task<LocationRecord> Get(Guid memberId, Guid recordId)
         {
-            locationRecord.Timestamp = DateTimeOffset.UtcNow;
-            await _documentClient.ReplaceDocumentAsync(GetLocationsDocumentUri(locationRecord.Id), locationRecord);
-            return locationRecord;
+            var result = await _documentClient.ReadDocumentAsync(GetLocationsDocumentUri(recordId),
+                new RequestOptions { PartitionKey = new PartitionKey(memberId.ToString()) });
+            return (LocationRecord)(dynamic)result.Resource;
         }
 
-        public LocationRecord Get(Guid recordId)
-        {
-            return _documentClient
-                .CreateDocumentQuery<LocationRecord>(GetLocationsCollectionUri())
-                .SingleOrDefault(t => t.Id == recordId);
-        }
-
-        public async Task Delete(Guid recordId)
+        public async Task Delete(Guid memberId, Guid recordId)
         {
             await _documentClient.DeleteDocumentAsync(GetLocationsDocumentUri(recordId));
         }
 
-        public LocationRecord GetLatestForMember(Guid memberId)
+        public async Task<LocationRecord> GetLatestForMember(Guid memberId)
         {
-            return _documentClient
-                .CreateDocumentQuery<LocationRecord>(GetLocationsCollectionUri(), new FeedOptions{EnableCrossPartitionQuery = true})
+            IDocumentQuery<LocationRecord> query = _documentClient.CreateDocumentQuery<LocationRecord>(
+                    GetLocationsCollectionUri(), new FeedOptions {PartitionKey = new PartitionKey(memberId.ToString())})
                 .Where(t => t.MemberId == memberId)
-                .ToList()
-                .OrderByDescending(t => t.Timestamp).Take(1).SingleOrDefault();
+                .OrderByDescending(f => f.CreationDate)
+                .Take(1)
+                .AsDocumentQuery();
+
+            return (await query.ExecuteNextAsync<LocationRecord>()).SingleOrDefault();
         }
 
-        public ICollection<LocationRecord> AllForMember(Guid memberId)
+        public async Task<ICollection<LocationRecord>> AllForMember(Guid memberId)
         {
-            return _documentClient
-                .CreateDocumentQuery<LocationRecord>(GetLocationsCollectionUri())
-                .Where(t => t.MemberId == memberId).ToList();
+            IDocumentQuery<LocationRecord> query = _documentClient.CreateDocumentQuery<LocationRecord>(
+                    GetLocationsCollectionUri(), new FeedOptions { PartitionKey = new PartitionKey(memberId.ToString()) })
+                .Where(t => t.MemberId == memberId)
+                .AsDocumentQuery();
+
+            List<LocationRecord> results = new List<LocationRecord>();
+            while (query.HasMoreResults)
+            {
+                results.AddRange(await query.ExecuteNextAsync<LocationRecord>());
+            }
+
+            return results;
         }
     }
 }

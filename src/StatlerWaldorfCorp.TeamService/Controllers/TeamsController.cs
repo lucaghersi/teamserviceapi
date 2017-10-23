@@ -23,9 +23,9 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpGet("{id}", Name = "GetTeamById")]
-        public IActionResult GetTeam(Guid id)
+        public async Task<IActionResult> GetTeam(Guid id)
         {
-            Team team = _repository.Get(id);
+            Team team = await _repository.Get(id);
 
             if (team != null)
                 return Ok(team);
@@ -36,14 +36,12 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         public async Task<IActionResult> CreateTeam([FromBody] Team newTeam)
         {
             newTeam = await _repository.Add(newTeam);
-            return Created(Url.Link("GetTeamById", new {id = newTeam.Id}), newTeam);
+            return Created(Url.Link("GetTeamById", new {newTeam.Id}), newTeam);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTeam([FromBody] Team team, Guid id)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateTeam([FromBody] Team team)
         {
-            team.Id = id;
-
             if (await _repository.Update(team) == null)
                 return NotFound();
             return Ok(team);

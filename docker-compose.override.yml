@@ -5,12 +5,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "5000:80"
+      - "80"
   statlerwaldorfcorp.locationservice:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "6000:80"
+      - "80"
 networks:
   default:
     external:

@@ -32,19 +32,16 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         public virtual async Task<IActionResult> GetMember(Guid teamId, Guid memberId)
         {
             var member = _repository.GetMemberInTeam(teamId, memberId);
+            if (member == null) return NotFound();
 
-            if (member != null)
+            var location = await _locationClient.GetLatestForMember(member.Id);
+            return Ok(new LocatedMember
             {
-                return Ok(new LocatedMember
-                {
-                    Id = member.Id,
-                    FirstName = member.FirstName,
-                    LastName = member.LastName,
-                    LastLocation = await _locationClient.GetLatestForMember(member.Id)
-                });
-            }
-
-            return NotFound();
+                Id = member.Id,
+                FirstName = member.FirstName,
+                LastName = member.LastName,
+                LastLocation = location
+            });
         }
 
         [HttpPut("/teams/{teamId}/[controller]/{memberId}", Name = "GetById")]
@@ -60,14 +57,16 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> CreateMember([FromBody] Member newMember, Guid teamId)
         {
+            newMember.TeamId = teamId;
+                
             var member = await _repository.CreateMember(newMember);
             return Created(Url.Link("GetById", new {teamId, memberId = member.Id}), member);
         }
 
         [HttpGet("/members/{memberId}/team")]
-        public IActionResult GetTeamForMember(Guid memberId)
+        public async Task<IActionResult> GetTeamForMember(Guid memberId)
         {
-            Member member = _repository.GetMember(memberId);
+            Member member = await _repository.GetMember(memberId);
 
             if (member != null)
                 return Ok(member.TeamId);

@@ -47,18 +47,17 @@ namespace StatlerWaldorfCorp.TeamService.Persistence
                 .ToList();
         }
 
-        public Team Get(Guid id)
+        public async Task<Team> Get(Guid id)
         {
-            return _documentClient
-                .CreateDocumentQuery<Team>(GetTeamCollectionUri())
-                .SingleOrDefault(t => t.Id == id);
+            var result = await _documentClient.ReadDocumentAsync(GetTeamDocumentUri(id),
+                new RequestOptions {PartitionKey = new PartitionKey(id.ToString()) });
+            return (Team)(dynamic)result.Resource;
         }
 
         public async Task<Team> Add(Team team)
         {
-            team.Id = Guid.NewGuid();
-            await _documentClient.CreateDocumentAsync(GetTeamCollectionUri(), team);
-            return team;
+            var result = await _documentClient.CreateDocumentAsync(GetTeamCollectionUri(), team);
+            return (Team)(dynamic)result.Resource;
         }
 
         public async Task<Team> Update(Team team)
@@ -89,12 +88,11 @@ namespace StatlerWaldorfCorp.TeamService.Persistence
                 .ToList();
         }
 
-        public Member GetMember(Guid memberId)
+        public async Task<Member> GetMember(Guid id)
         {
-            return _documentClient
-                .CreateDocumentQuery<Member>(GetMemberCollectionUri(),
-                    new FeedOptions {EnableCrossPartitionQuery = true})
-                .SingleOrDefault(m => m.Id == memberId);
+            var result = await _documentClient.ReadDocumentAsync(GetMemberDocumentUri(id),
+                new RequestOptions { PartitionKey = new PartitionKey(id.ToString()) });
+            return (Member)(dynamic)result.Resource;
         }
 
         public Member GetMemberInTeam(Guid teamId, Guid memberId)

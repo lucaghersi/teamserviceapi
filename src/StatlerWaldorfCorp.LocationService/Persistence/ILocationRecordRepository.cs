@@ -8,12 +8,11 @@ namespace StatlerWaldorfCorp.LocationService.Persistence
     public interface ILocationRecordRepository
     {
         Task<LocationRecord> Add(LocationRecord locationRecord);
-        Task<LocationRecord> Update(LocationRecord locationRecord);
-        LocationRecord Get(Guid recordId);
-        Task Delete(Guid recordId);
+        Task<LocationRecord> Get(Guid memberId, Guid recordId);
+        Task Delete(Guid memberId, Guid recordId);
 
-        LocationRecord GetLatestForMember(Guid memberId);
+        Task<LocationRecord> GetLatestForMember(Guid memberId);
 
-        ICollection<LocationRecord> AllForMember(Guid memberId);
+        Task<ICollection<LocationRecord>> AllForMember(Guid memberId);
     }
 }
