@@ -6,7 +6,7 @@ using StatlerWaldorfCorp.TeamService.Persistence;
 
 namespace StatlerWaldorfCorp.TeamService.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class TeamsController : Controller
     {
         private readonly ITeamRepository _repository;
@@ -17,9 +17,9 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllTeams()
+        public async Task<IActionResult> GetAllTeams()
         {
-            return Ok(_repository.List());
+            return Ok(await _repository.List());
         }
 
         [HttpGet("{id}", Name = "GetTeamById")]
@@ -40,8 +40,10 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateTeam([FromBody] Team team)
+        public async Task<IActionResult> UpdateTeam(Guid id, [FromBody] Team team)
         {
+            team.Id = id;
+            
             if (await _repository.Update(team) == null)
                 return NotFound();
             return Ok(team);

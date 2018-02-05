@@ -37,7 +37,7 @@ namespace StatlerWaldorfCorp.TeamService
             var docDb = Configuration.GetSection("documentdb:uri").Value;
             var docDbKey = Configuration.GetSection("documentdb:key").Value;
 
-            services.AddSingleton<IDocumentClient>(new DocumentClient(new Uri(docDb), docDbKey));
+            services.AddSingleton(new DocumentClient(new Uri(docDb), docDbKey));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -8,7 +8,7 @@ using StatlerWaldorfCorp.TeamService.Persistence;
 
 namespace StatlerWaldorfCorp.TeamService.Controllers
 {
-    [Route("/teams/{teamId}/[controller]")]
+    [Route("api/teams/{teamId}/[controller]")]
     public class MembersController : Controller
     {
         private readonly ILocationClient _locationClient;
@@ -21,9 +21,9 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         }
 
         [HttpGet]
-        public virtual IActionResult GetMembers(Guid teamId)
+        public virtual async Task<IActionResult> GetMembers(Guid teamId)
         {
-            var teamMembers = _repository.GetMembersByTeam(teamId);
+            var teamMembers = await _repository.GetMembersByTeam(teamId);
             return Ok(teamMembers);
         }
 
@@ -31,7 +31,7 @@ namespace StatlerWaldorfCorp.TeamService.Controllers
         [HttpGet("/teams/{teamId}/[controller]/{memberId}")]
         public virtual async Task<IActionResult> GetMember(Guid teamId, Guid memberId)
         {
-            var member = _repository.GetMemberInTeam(teamId, memberId);
+            var member = await _repository.GetMemberInTeam(teamId, memberId);
             if (member == null) return NotFound();
 
             var location = await _locationClient.GetLatestForMember(member.Id);
